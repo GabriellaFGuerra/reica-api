@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Property;
 use App\Models\Address;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Modality;
+use App\Models\Project;
+use App\Models\Property;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Image;
+use Illuminate\Support\Carbon;
+use Propaganistas\LaravelPhone\PhoneNumber;
+use Illuminate\Support\Facades\Auth;
 
 class PropertyController extends Controller
 {
@@ -47,6 +53,30 @@ class PropertyController extends Controller
         $property->address_id = $address->id;
         $property->save();
 
+        foreach ($request->images as $file) {
+            $imagename = str_replace(' ', '_', $property->name . '_' . Carbon::now()->format('d-m-Y_H-i-s') . '_image_' . $file->getClientOriginalName());
+            Storage::disk('public')->put('/images/' . $imagename, file_get_contents($file));
+            $image = new Image;
+            $image->image = $imagename;
+            $image->path = 'images/' . $imagename;
+            $image->property_id = $property->id;
+            $image->isBlueprint = '0';
+            $image->save();
+        }
+
+        if ($request->hasFile('blueprints')) {
+            foreach ($request->blueprints as $file) {
+                $imagename = str_replace(' ', '_', $property->name . '_' . Carbon::now()->format('d-m-Y_H-i-s') . '_blueprint_' . $file->getClientOriginalName());
+                Storage::disk('public')->put('/blueprints/' . $imagename, file_get_contents($file));
+                $image = new Image;
+                $image->image = $imagename;
+                $image->path = 'images/' . $imagename;
+                $image->property_id = $property->id;
+                $image->isBlueprint = '1';
+                $image->save();
+            }
+        }
+
         return response()->json($property, 201);
     }
 
@@ -56,7 +86,8 @@ class PropertyController extends Controller
      * @param int $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public
+    function show($id)
     {
         $property = Property::with('images', 'address')->find($id);
 
@@ -74,7 +105,8 @@ class PropertyController extends Controller
      * @param int $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public
+    function edit($id)
     {
         //
     }
@@ -86,7 +118,8 @@ class PropertyController extends Controller
      * @param int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public
+    function update(Request $request, $id)
     {
         $property = Property::find($id);
         $property->fill($request->all());
@@ -105,7 +138,8 @@ class PropertyController extends Controller
      * @param int $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public
+    function destroy($id)
     {
         $property = Property::find($id);
 

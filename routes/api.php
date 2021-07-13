@@ -16,8 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
-    return response()->json(['message' => 'Reica API', 'status' => 'Connected']);;
+    return response()->json(['message' => 'Reica API', 'status' => 'Connected']);
 });
+Route::post('register', 'AuthController@register');
+Route::post('login', 'AuthController@login');
+Route::get('me', 'AuthController@me')->middleware('auth:sanctum')->name('home');
 
-Route::resource('projects', 'ProjectController');
-Route::resource('properties', 'PropertyController');
+
+Route::resource('projects', 'ProjectController')->middleware('auth:sanctum');
+Route::resource('properties', 'PropertyController')->middleware('auth:sanctum');
